@@ -17,14 +17,59 @@ class Game():
     def _is_puzzle_solved(self, row, col):
         '''Is the given row,col the finish square?'''
         return self._maze.get_finish() == (row, col)
+    
+
+    def _is_move_really_available(self, row, col, path):
+        return self._maze.is_move_in_maze(row, col) and not self._maze.is_wall(row, col) and self._is_move_available(
+            row, col, path)
+
+    def _do_we_have_any_moves(self, row, col, path):
+        return self._is_move_really_available(row + 1, col, path) or self._is_move_really_available(row - 1, col,
+                                                                                                    path) or self._is_move_really_available(
+            row, col + 1, path) or self._is_move_really_available(row, col - 1, path)
+
 
 
     ########################################################
     # TODO - Main recursive method. Add your algorithm here.
+    visited = []
     def find_route(self, currow, curcol, curscore, curpath):
-        pass
+        return self.new_one(currow, curcol, curscore, curpath, list())
+        
+
+    def new_one(self, currow, curcol, curscore, curpath, visited):
+
+        visited.append((currow, curcol))
+
+        if self._is_puzzle_solved(currow, curcol):
+            curscore += self._maze.make_move(currow, curcol, curpath)
+            return curscore, curpath
+
+        if not self._do_we_have_any_moves(currow, curcol, curpath):
+            # find latest
+            if len(curpath) > 0:
+                last = curpath[-1]
+                score, path = self.new_one(last[0], last[1], curscore, curpath, visited)
+                return score, path
+            else:
+                return -1, []
 
 
+        curscore += self._maze.make_move(currow, curcol, curpath)
+        if self._is_move_really_available(currow + 1, curcol, visited):
+            score, path = self.new_one(currow + 1, curcol, curscore, curpath, visited)
+            return score, path
+        elif self._is_move_really_available(currow - 1, curcol, visited):
+            score, path = self.new_one(currow - 1, curcol, curscore, curpath, visited)
+            return score, path
+        elif self._is_move_really_available(currow, curcol + 1, visited):
+            score, path = self.new_one(currow, curcol + 1, curscore, curpath, visited)
+            return score, path
+        elif self._is_move_really_available(currow, curcol - 1, visited):
+            score, path = self.new_one(currow, curcol - 1, curscore, curpath, visited)
+            return score, path
+        else:
+            return -1, []
 
 # This block of code will be useful in debugging your algorithm. But you still need
 #  to create unittests to thoroughly testing your code.
